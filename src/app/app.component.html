@@ -1,0 +1,72 @@
+<div class="title"><span>Архив метеослужбы</span></div>
+<div class="main">
+	<div class="content row alert alert-danger" style="height: max-content">
+		<div class="col-4">
+			<button
+				[class.btn-primary]="currentTypeView == typeView.TEMPERATURES"
+				class="btn btn-block"
+				[disabled]="isWorkerDisabled"
+				(click)="changeCurrentViewType(0)"
+			>
+				Температура
+			</button>
+			<button
+				[class.btn-primary]="currentTypeView == typeView.PRECIPITATION"
+				class="btn btn-block"
+				[disabled]="isWorkerDisabled"
+				(click)="changeCurrentViewType(1)"
+			>
+				Осадки
+			</button>
+			<button class="btn btn-block" (click)="testMethod()">TestMethod</button>
+		</div>
+		<div class="col-8">
+			<div class="row">
+				<div class="input-group col-6">
+					<select
+						class="custom-select"
+						[disabled]="isWorkerDisabled"
+						[(ngModel)]="startYear"
+						(ngModelChange)="changeYearsPeriod(true)"
+					>
+						<option *ngFor="let year of startYears" [value]="year">
+							{{ year }}
+						</option>
+					</select>
+				</div>
+				<div class="input-group col-6">
+					<select class="custom-select" [disabled]="isWorkerDisabled" [(ngModel)]="endYear" (ngModelChange)="changeYearsPeriod()">
+						<option *ngFor="let year of endYears" [value]="year">
+							{{ year }}
+						</option>
+					</select>
+				</div>
+			</div>
+			<ng-container *ngIf="!isWorkerDisabled; else elseTemplate">
+				<div #charts class="charts" [ngStyle]="{visibility: chartData ? 'visible' : 'hidden'}">
+					<ngx-charts-line-chart
+						[view]="[charts.width - 50, charts.height]"
+						[legend]="options.legend"
+						[showXAxisLabel]="options.showXAxisLabel"
+						[showYAxisLabel]="options.showYAxisLabel"
+						[xAxis]="options.xAxis"
+						[yAxis]="options.yAxis"
+						[xAxisLabel]="options.xAxisLabel"
+						[yAxisLabel]="options.yAxisLabel"
+						[timeline]="options.timeline"
+						[results]="chartData"
+						(select)="onSelect($event)"
+						(activate)="onActivate($event)"
+						(deactivate)="onDeactivate($event)"
+					>
+					</ngx-charts-line-chart>
+				</div>
+			</ng-container>
+			<ng-template #elseTemplate>
+				<div class="charts">
+					<h3>Sorry. Сurrent environment does not support Web-workers features. App will not work.</h3>
+				</div>
+			</ng-template>
+		</div>
+	</div>
+</div>
