@@ -1,30 +1,34 @@
 /// <reference lib="webworker" />
 
-import { Watch } from './models/models';
+import { Watch, WorkerResponse } from './models/models';
 
 addEventListener('message', ({ data }) => {
-  const response: any = { type: data.type };
+  const response: WorkerResponse = { type: data.type };
   switch (data.type) {
     case 'begin':
-      const allYears = new Set();
-      data.payload[0].forEach((item: Watch) => {
-        const val = item.t.slice(0, 4);
-        allYears.add(val);
-      });
       response.data = {
-        years: Array.from(allYears)
+        years: getYears(data)
       };
       break;
     case 'average':
-      response.data = [{
+      response.data = {
         name: '',
         series: getAverageValues(data)
-      }];
+      };
       break;
   }
 
   postMessage(response);
 });
+
+function getYears(data): Array<any> {
+  const allYears = new Set();
+  data.payload[0].forEach((item: Watch) => {
+    const val = item.t.slice(0, 4);
+    allYears.add(val);
+  });
+  return Array.from(allYears);
+}
 
 function getAverageValues(data) {
   const { startYear, endYear } = data.payload;

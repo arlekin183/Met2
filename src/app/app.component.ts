@@ -1,5 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { forkJoin, Subscription } from 'rxjs';
 import { ApiService } from './api.service';
 
 enum TYPEVIEW { TEMPERATURES, PRECIPITATION }
@@ -9,7 +9,7 @@ enum TYPEVIEW { TEMPERATURES, PRECIPITATION }
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('charts', { static: false }) charts: ElementRef;
 
   typeView = TYPEVIEW;
@@ -28,13 +28,14 @@ export class AppComponent implements OnInit {
     legend: false, showLabels: true, animations: false, xAxis: true, yAxis: true, showXAxisLabel: true,
     showYAxisLabel: true, xAxisLabel: 'Year', yAxisLabel: 'Temperature', timeline: true, view: [0, 0]
   };
+  subscription: Subscription;
 
   constructor(private apiService: ApiService) {
 
   }
 
   ngOnInit(): void {
-    forkJoin([this.apiService.getTemperature(), this.apiService.getPrecipitation()])
+    this.subscription = forkJoin([this.apiService.getTemperature(), this.apiService.getPrecipitation()])
       .subscribe(data => {
         this.temperatures = data[0];
         this.precipitations = data[1];
@@ -43,11 +44,7 @@ export class AppComponent implements OnInit {
       });
   }
 
-  testMethod() {
-    this.isWorkerDisabled = !this.isWorkerDisabled;
-  }
-
-  changeYearsPeriod(startYear?) {
+  changeYearsPeriod(startYear?): void {
     if (startYear) {
       this.endYears = this.startYears.slice(this.startYears.lastIndexOf(this.startYear), this.startYears.length - 1);
       this.endYear = this.endYears[this.endYears.length - 1];
@@ -57,7 +54,6 @@ export class AppComponent implements OnInit {
         startYear: +this.startYear, endYear: +this.endYear,
         valueArray: this.currentTypeView === 0 ? this.temperatures : this.precipitations
       });
-    console.log();
   }
 
   sendMessageToWorker(workerType: string, value: any): void {
@@ -85,7 +81,7 @@ export class AppComponent implements OnInit {
         break;
       case 'average':
         this.options.view = [this.charts.nativeElement.clientWidth, this.charts.nativeElement.clientHeight];
-        this.chartData = workerAnswer.data;
+        this.chartData = [workerAnswer.data];
         break;
 
       default:
@@ -119,5 +115,9 @@ export class AppComponent implements OnInit {
   onDeactivate(data): void {
     console.log('Deactivate', JSON.parse(JSON.stringify(data)));
   }
+  ngOnDestroy(): void {
+    if (this.subscription) { this.subscription.unsubscribe(); }
+  }
+
 }
 
